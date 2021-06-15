@@ -1,16 +1,16 @@
 {
   "private": true,
-  "displayName": "Plugin Name",
-  "name": "homebridge-plugin-name",
+  "displayName": "laundrify (Official)",
+  "name": "homebridge-laundrify-official",
   "version": "1.0.0",
   "description": "A short description about what your plugin does.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "git://github.com/laundrify/homebridge-laundrify-official.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/laundrify/homebridge-laundrify-official/issues"
   },
   "engines": {
     "node": ">=10.17.0",
@@ -24,9 +24,15 @@
     "prepublishOnly": "npm run lint && npm run build"
   },
   "keywords": [
-    "homebridge-plugin"
+    "homebridge",
+    "homebridge-plugin",
+    "laundrify",
+    "laundrify-official"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "axios": "^0.21.1",
+    "fs-extra": "^10.0.0"
+  },
   "devDependencies": {
     "@types/node": "^14.14.31",
     "@typescript-eslint/eslint-plugin": "^4.16.1",

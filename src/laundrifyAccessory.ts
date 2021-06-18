@@ -40,6 +40,14 @@ export class LaundrifyAccessory {
 			.onGet( () => this.handleGetValue() )
 
 		// Frequently poll the current status of the Machine
+		let pollInterval = this.platform.config.pollInterval * 1000 || 60000
+
+		if (pollInterval < 10000) {
+			this.platform.log.warn('The configured pollInterval is below the minimum of 10s!')
+			this.platform.log.warn('Using the default value of 60s instead.')
+			pollInterval = 60000
+		}
+
 		setInterval( async () => {
 			try {
 				const machine = await this.platform.laundrifyApi.loadMachine( this.accessory.context.device._id )
@@ -48,7 +56,7 @@ export class LaundrifyAccessory {
 			} catch(err) {
 				this.platform.log.error('Error while loading Machine: ', err)
 			}
-		}, 10000);
+		}, pollInterval)
 	}
 
 	/**

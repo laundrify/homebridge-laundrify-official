@@ -58,7 +58,7 @@ export class LaundrifyPlatform implements DynamicPlatformPlugin {
 	 */
 	discoverDevices() {
 		this.laundrifyApi.loadMachines().then( machines => {
-			this.log.info(`Retrieved ${machines.length} Machines from backend`)
+			this.log.info(`Retrieved ${machines.length} Machines (${machines.map(m => m._id).join(', ')}) from backend`)
 
 			// loop over the discovered devices and register each one if it has not already been registered
 			for (const machine of machines) {
@@ -103,10 +103,19 @@ export class LaundrifyPlatform implements DynamicPlatformPlugin {
 					// link the accessory to your platform
 					this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory])
 				}
-
-				// TODO:
-				// delete accessories which have been removed from this account
 			}
+
+			// delete accessories that have been removed from this account
+			this.accessories.forEach( cachedAccessory => {
+				const cachedMachine = cachedAccessory.context.device
+				const isObsolete = machines.findIndex( m => cachedMachine._id === m._id ) === -1
+
+				if (isObsolete) {
+					this.log.warn(`Removing Machine ${cachedMachine._id} from cache since it hasn't been returned from backend`)
+					this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [cachedAccessory])
+				}
+
+			})
 		}).catch( err => {
 			this.log.error(`Error while loading Machines from backend: `, err)
 		})

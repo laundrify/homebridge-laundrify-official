@@ -108,6 +108,13 @@ export default class LaundrifyApi {
 	}
 
 	async register() {
+		const authCode = this.config.authCode
+
+		if ( /\d{3}-\d{3}/.test(authCode) === false ) {
+			this.log.error(`The configured authCode ${authCode} doesn't match the expected pattern! (xxx-xxx)`)
+			return false
+		}
+
 		try {
 			const res = await axios.post(`/auth/homebridge/token`, {authCode: this.config.authCode})
 

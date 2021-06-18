@@ -5,11 +5,20 @@
   "schema": {
     "type": "object",
     "properties": {
-      "name": {
-        "title": "Name",
+      "authCode": {
+        "title": "AuthCode",
+        "description": "Must be obtained from the laundrify-App",
         "type": "string",
+        "pattern": "^\\d{3}-\\d{3}$",
         "required": true,
-        "default": "laundrify"
+        "placeholder": "xxx-xxx"   
+      },
+      "pollInterval": {
+        "title": "Poll Interval (in seconds)",
+        "type": "integer",
+        "required": false,
+        "default": 60,
+        "minimum": 10
       }
     }
   }

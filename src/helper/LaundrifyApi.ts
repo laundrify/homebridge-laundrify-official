@@ -9,8 +9,6 @@ import axios from 'axios'
 
 import { LAUNDRIFY_CONFIG_FILE, LAUNDRIFY_BASEURL } from '../settings'
 
-axios.defaults.baseURL = LAUNDRIFY_BASEURL
-
 export default class LaundrifyApi {
 
 	private isInitialized: Promise<boolean>
@@ -22,6 +20,8 @@ export default class LaundrifyApi {
 		private readonly api: API,
 	) {
 		this.accessToken = ''
+
+		axios.defaults.baseURL = this.config.baseUrl || LAUNDRIFY_BASEURL
 
 		// handle 401 responses to reset the accessToken
 		axios.interceptors.response.use(

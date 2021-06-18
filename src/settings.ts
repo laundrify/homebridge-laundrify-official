@@ -10,4 +10,4 @@ export const PLUGIN_NAME = 'homebridge-laundrify-official';
 
 export const LAUNDRIFY_CONFIG_FILE = '/laundrify-official.json'
 
-export const LAUNDRIFY_BASEURL = 'http://192.168.178.135:4000'
+export const LAUNDRIFY_BASEURL = 'https://api.laundrify.de'

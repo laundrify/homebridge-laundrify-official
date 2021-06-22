@@ -19,6 +19,11 @@
         "required": false,
         "default": 60,
         "minimum": 10
+      },
+      "invertStatus": {
+        "title": "Invert status",
+        "description": "Check this option to use OPEN => On / CLOSE => Off (will be enabled by default in v2.0.0)",
+        "type": "boolean"
       }
     }
   }

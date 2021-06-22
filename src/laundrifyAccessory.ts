@@ -39,6 +39,13 @@ export class LaundrifyAccessory {
 		this.service.getCharacteristic(this.platform.Characteristic.ContactSensorState)
 			.onGet( () => this.handleGetValue() )
 
+		if (this.platform.config.invertStatus) {
+			this.statusMap = {
+				'ON': this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED,
+				'OFF': this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED,
+			}
+		}
+
 		// Frequently poll the current status of the Machine
 		let pollInterval = this.platform.config.pollInterval * 1000 || 60000
 

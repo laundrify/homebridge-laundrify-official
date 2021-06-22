@@ -58,7 +58,7 @@ export default class LaundrifyApi {
 						}
 
 					} else {
-						this.log.info('AccessToken has been loaded from disk: ' + accessToken)
+						this.log.info('AccessToken has been loaded from disk')
 						this.accessToken = accessToken
 					}
 

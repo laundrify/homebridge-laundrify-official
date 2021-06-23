@@ -14,9 +14,9 @@ This plugin exposes your [laundrify](https://laundrify.de) Power Plugs to Apple 
 
 To get started you need to 
 
-	1) Install the Plugin
-	2) Obtain an AuthCode in the laundrify-App
-	3) Configure the Plugin
+  1) Install the Plugin
+  2) Obtain an AuthCode in the laundrify-App
+  3) Configure the Plugin
 
 ### 1) Installation
 
@@ -44,18 +44,25 @@ Add (or extend) the `platforms` property in your Homebridge configuration as sho
 
 ```json
 {
-	"bridge": {...},
-	"platforms": [
-		{...}, 
-		{
-			"platform": "laundrify",
-			"authCode": "xxx-xxx",
-		}
-	]
+  "bridge": {...},
+  "platforms": [
+    {...}, 
+    {
+      "platform": "laundrify",
+      "authCode": "xxx-xxx",
+      "invertStatus": false,
+    }
+  ]
 }
 ```
 
 Replace `xxx-xxx` with the Auth Code that has been obtained in the previous step.
+
+By default the ContactSensor states are mapped to the laundrify states as follows:
+  - `OPEN => Off`
+  - `CLOSED => On`
+
+Since HomeKit will hide closed ContactSensors from the overview, you can invert the status mapping by setting `invertStatus` to `true`. 
 
 Don't forget to restart Homebridge after saving the configuration.
 
@@ -63,6 +70,6 @@ Don't forget to restart Homebridge after saving the configuration.
 
 - Install dependencies using `npm i`
 - Build and link the Plugin
-	- using `npm run watch` for automatic builds
-	- or `npm run build && npm link` for a manual build
+  - using `npm run watch` for automatic builds
+  - or `npm run build && npm link` for a manual build
 - Publish Package using `npm publish` (don't forget to update the version number in `package.json`)

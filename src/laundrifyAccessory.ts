@@ -61,7 +61,7 @@ export class LaundrifyAccessory {
 
 				this.service.updateCharacteristic(this.platform.Characteristic.ContactSensorState, this.statusMap[machine.status])
 			} catch(err) {
-				this.platform.log.error('Error while loading Machine: ', err)
+				this.platform.log.error('Error while polling Machine status: ', err)
 			}
 		}, pollInterval)
 	}

@@ -28,12 +28,14 @@ export default class LaundrifyApi {
 			(response) => response,
 			(error) => {
 				// Any status codes that falls outside the range of 2xx cause this function to trigger
-				if (error.response.status === 401) {
+				if (error.response && error.response.status === 401) {
 					this.log.warn('AccessToken seems to be invalid, going to remove it.')
 					this.accessToken = ''
 					this.persistToken()
 
 					return Promise.reject('Invalid AccessToken!')
+				} else if (typeof error.toJSON === 'function') {
+					return Promise.reject(error.toJSON())
 				}
 
 				return Promise.reject(error)
@@ -154,7 +156,9 @@ export default class LaundrifyApi {
 	}
 
 	async loadMachine(_machine) {
-		const res = await axios.get(`/api/machines/${_machine}`)
+		const res = await axios.get(`/api/machines/${_machine}`, {
+			timeout: 2500,
+		})
 
 		return res.data
 	}

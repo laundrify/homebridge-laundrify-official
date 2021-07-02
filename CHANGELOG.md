@@ -1,6 +1,6 @@
 # Changelog
 
-## Next release (tbd)
+## v1.1.1 (2021-07-02)
 
  - fix: add timeout of 2.5s when polling and log error as JSON
  - fix: use `.on('get', fn)` if `.onGet()` is not available (to support Homebridge v1.2.5)

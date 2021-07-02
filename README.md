@@ -72,4 +72,4 @@ Don't forget to restart Homebridge after saving the configuration.
 - Build and link the Plugin
   - using `npm run watch` for automatic builds
   - or `npm run build && npm link` for a manual build
-- Publish Package using `npm publish` (don't forget to update the version number in `package.json`)
+- Publish Package using `npm publish` (don't forget to update the version number in `package[-lock].json`)

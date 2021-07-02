@@ -1,7 +1,7 @@
 {
   "displayName": "laundrify (Official)",
   "name": "homebridge-laundrify-official",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Expose your laundrify Power Plugs to Apple HomeKit using Homebridge.",
   "license": "Apache-2.0",
   "repository": {

@@ -36,8 +36,14 @@ export class LaundrifyAccessory {
 		this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name)
 
 		// register handlers for the ContactSensorState characteristic
-		this.service.getCharacteristic(this.platform.Characteristic.ContactSensorState)
-			.onGet( () => this.handleGetValue() )
+		const sensorState = this.service.getCharacteristic(this.platform.Characteristic.ContactSensorState)
+
+		// check if onGet() handler is available (Homebridge v1.3.0+) or use fallback
+		if (typeof sensorState.onGet === 'function') {
+			sensorState.onGet( () => this.handleGetValue() )
+		} else {
+			sensorState.on('get', (cb) => this.syncHandleGetValue(cb))
+		}
 
 		if (this.platform.config.invertStatus) {
 			this.statusMap = {
@@ -90,7 +96,21 @@ export class LaundrifyAccessory {
 			this.platform.log.error('Error while loading Machine: ', err)
 
 			// return an error to show the device as "Not Responding" in the Home app:
-			throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+			throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE)
 		}
+	}
+
+	syncHandleGetValue(cb) {
+		this.platform.laundrifyApi.loadMachine( this.accessory.context.device._id )
+			.then( (machine) => {
+				this.platform.log.debug(`Machine ${machine._id} is currently ${machine.status}`)
+
+				cb(null, this.statusMap[machine.status])
+			})
+			.catch( err => {
+				this.platform.log.error('Error while sync loading Machine: ', err)
+
+				cb(err, null)
+			})
 	}
 }

@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.1.2 (2021-08-04)
+## v1.2.0 (2021-08-04)
 
  - feat: resend request if it failed (max 3 times with exponential backoff)
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.2 (2021-08-04)
+
+ - feat: resend request if it failed (max 3 times with exponential backoff)
+
 ## v1.1.1 (2021-07-02)
 
  - fix: add timeout of 2.5s when polling and log error as JSON

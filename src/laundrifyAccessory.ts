@@ -67,7 +67,7 @@ export class LaundrifyAccessory {
 
 				this.service.updateCharacteristic(this.platform.Characteristic.ContactSensorState, this.statusMap[machine.status])
 			} catch(err) {
-				this.platform.log.error('Error while polling Machine status: ', err)
+				this.platform.log.error('Error while polling Machine status: ', err.message)
 			}
 		}, pollInterval)
 	}
@@ -93,7 +93,7 @@ export class LaundrifyAccessory {
 
 			return this.statusMap[machine.status]
 		} catch(err) {
-			this.platform.log.error('Error while loading Machine: ', err)
+			this.platform.log.error('Error while loading Machine: ', err.message)
 
 			// return an error to show the device as "Not Responding" in the Home app:
 			throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE)

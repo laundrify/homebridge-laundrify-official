@@ -77,6 +77,28 @@ export default class LaundrifyApi {
 		return this.api.user.storagePath() + LAUNDRIFY_CONFIG_FILE
 	}
 
+	async sendRequest(method, url, options = {}, maxRetry = 3, retryCtr = 0) {
+		try {
+			const res = await axios.request({
+				method,
+				url,
+				...options,
+			})
+
+			return res
+		} catch(err) {
+			if (retryCtr < maxRetry) {
+				const waitTime = (2**retryCtr) * 200		// equals to 200, 400, 800ms
+
+				await new Promise( resolve => setTimeout(resolve, waitTime) )
+
+				return this.sendRequest(method, url, options, maxRetry, ++retryCtr)
+			} else {
+				throw err
+			}
+		}
+	}
+
 	async loadToken() {
 		try {
 			const laundrifyConfig = await fs.readJson( this.getConfigFilePath() )
@@ -156,19 +178,10 @@ export default class LaundrifyApi {
 	}
 
 	async loadMachine(_machine) {
-		const res = await axios.get(`/api/machines/${_machine}`, {
-			timeout: 2500,
+		const res = await this.sendRequest('GET', `/api/machines/${_machine}`, {
+			timeout: 5000,
 		})
 
 		return res.data
 	}
 }
-
-// export const writeConfig = async (config) => {
-// 	try {
-// 		config.updatedAt = (new Date()).toISOString()
-// 		fs.writeJson(getConfigFilePath(), config, { spaces: '\t' })
-// 	} catch(err) {
-// 		_log.error(`Error while writing ${getConfigFilePath()}: `, err)
-// 	}
-// }

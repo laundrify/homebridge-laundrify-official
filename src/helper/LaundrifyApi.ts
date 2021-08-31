@@ -9,18 +9,26 @@ import axios from 'axios'
 
 import { LAUNDRIFY_CONFIG_FILE, LAUNDRIFY_BASEURL } from '../settings'
 
+interface LaundrifyConfig {
+	updatedAt: string
+	authCode: string
+	accessToken: string
+}
+
 export default class LaundrifyApi {
 
 	private isInitialized: Promise<boolean>
-	private accessToken: string
+	private pluginConfig: LaundrifyConfig = {
+		updatedAt: '',
+		authCode: '',
+		accessToken: '',
+	}
 
 	constructor(
 		private readonly log: Logger,
 		private readonly config: PlatformConfig,
 		private readonly api: API,
 	) {
-		this.accessToken = ''
-
 		axios.defaults.baseURL = this.config.baseUrl || LAUNDRIFY_BASEURL
 
 		// handle 401 responses to reset the accessToken
@@ -30,11 +38,12 @@ export default class LaundrifyApi {
 				// Any status codes that falls outside the range of 2xx cause this function to trigger
 				if (error.response && error.response.status === 401) {
 					this.log.warn('AccessToken seems to be invalid, going to remove it.')
-					this.accessToken = ''
-					this.persistToken()
 
-					return Promise.reject('Invalid AccessToken!')
-				} else if (typeof error.toJSON === 'function') {
+					this.pluginConfig.accessToken = ''
+					this.writePluginConfig()
+				}
+
+				if (typeof error.toJSON === 'function') {
 					return Promise.reject(error.toJSON())
 				}
 
@@ -49,8 +58,8 @@ export default class LaundrifyApi {
 				return resolve(false)
 			} else {
 				// if authToken has been provided, load the accessToken from the internal config
-				this.loadToken().then( async accessToken => {
-					if (!accessToken) {
+				this.readPluginConfig().then( async () => {
+					if (!this.pluginConfig.accessToken) {
 						this.log.info('Homebridge did not register itself at laundrify API yet. Going to register now..')
 
 						const registrationSuccessful = await this.register()
@@ -58,14 +67,10 @@ export default class LaundrifyApi {
 						if ( !registrationSuccessful ) {
 							return resolve(false)
 						}
-
-					} else {
-						this.log.info('AccessToken has been loaded from disk')
-						this.accessToken = accessToken
 					}
 
 					// set Authorization header to use the accessToken for all requests
-					axios.defaults.headers.common['Authorization'] = 'Bearer hb|' + this.accessToken
+					axios.defaults.headers.common['Authorization'] = 'Bearer hb|' + this.pluginConfig.accessToken
 
 					return resolve(true)
 				})
@@ -99,33 +104,31 @@ export default class LaundrifyApi {
 		}
 	}
 
-	async loadToken() {
+	async readPluginConfig() {
 		try {
 			const laundrifyConfig = await fs.readJson( this.getConfigFilePath() )
 
 			this.log.debug('Read config from disk: ' + JSON.stringify(laundrifyConfig))
 
-			if (laundrifyConfig.accessToken) {
-				return laundrifyConfig.accessToken
-			}
+			this.pluginConfig = laundrifyConfig
+
+			return true
 		} catch(err) {
-			if (err.code === 'ENOENT') {
-				// file not found
-				return ''
-			}
 			this.log.error(`Error while reading ${this.getConfigFilePath()}: `, err)
+			return false
 		}
 	}
 
-	async persistToken() {
+	async writePluginConfig() {
 		try {
 			const laundrifyConfig = {
 				updatedAt: (new Date()).toISOString(),
-				accessToken: this.accessToken,
+				authCode: this.pluginConfig.authCode,
+				accessToken: this.pluginConfig.accessToken,
 			}
 
 			fs.writeJson(this.getConfigFilePath(), laundrifyConfig, { spaces: '\t' })
-			this.log.info(`Token has been written to ${this.getConfigFilePath()}`)
+			this.log.info(`Config has been written to ${this.getConfigFilePath()}`)
 		} catch(err) {
 			this.log.error(`Error while writing ${this.getConfigFilePath()}: `, err)
 		}
@@ -145,8 +148,8 @@ export default class LaundrifyApi {
 			if (res.data && res.data.token) {
 				this.log.info('Registration successful.')
 
-				this.accessToken = res.data.token
-				this.persistToken()
+				this.pluginConfig.accessToken = res.data.token
+				this.writePluginConfig()
 
 				return true
 			} else {

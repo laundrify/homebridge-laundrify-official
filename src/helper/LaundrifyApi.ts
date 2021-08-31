@@ -59,6 +59,15 @@ export default class LaundrifyApi {
 			} else {
 				// if authToken has been provided, load the accessToken from the internal config
 				this.readPluginConfig().then( async () => {
+					if (this.pluginConfig.authCode !== this.config.authCode) {
+						this.log.info('The configured AuthCode changed, going to update the plugin config..')
+
+						this.pluginConfig.authCode = this.config.authCode
+						this.pluginConfig.accessToken = ''
+
+						await this.writePluginConfig()
+					}
+
 					if (!this.pluginConfig.accessToken) {
 						this.log.info('Homebridge did not register itself at laundrify API yet. Going to register now..')
 

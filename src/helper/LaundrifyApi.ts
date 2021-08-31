@@ -101,7 +101,7 @@ export default class LaundrifyApi {
 
 			return res
 		} catch(err) {
-			if (retryCtr < maxRetry) {
+			if (retryCtr < maxRetry && !err.message.includes('401')) {
 				const waitTime = (2**retryCtr) * 200		// equals to 200, 400, 800ms
 
 				await new Promise( resolve => setTimeout(resolve, waitTime) )
@@ -167,7 +167,7 @@ export default class LaundrifyApi {
 				return false
 			}
 		} catch(err) {
-			if (err.response.status === 404) {
+			if ( err.message.includes('404') ) {
 				this.log.error(`Registration failed: AuthCode ${this.config.authCode} not found. Please check your config.`)
 			} else {
 				this.log.error(`Registration failed: `, err)
@@ -190,6 +190,10 @@ export default class LaundrifyApi {
 	}
 
 	async loadMachine(_machine) {
+		if (!this.pluginConfig.accessToken) {
+			throw new Error(`AccessToken is missing!`)
+		}
+
 		const res = await this.sendRequest('GET', `/api/machines/${_machine}`, {
 			timeout: 5000,
 		})

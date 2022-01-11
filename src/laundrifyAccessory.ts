@@ -66,7 +66,7 @@ export class LaundrifyAccessory {
 				const machine = await this.platform.laundrifyApi.loadMachine( this.accessory.context.device._id )
 
 				this.service.updateCharacteristic(this.platform.Characteristic.ContactSensorState, this.statusMap[machine.status])
-			} catch(err) {
+			} catch(err: any) {
 				this.platform.log.error('Error while polling Machine status: ', err.message)
 			}
 		}, pollInterval)
@@ -92,7 +92,7 @@ export class LaundrifyAccessory {
 			this.platform.log.debug(`Machine ${machine._id} is currently ${machine.status}`)
 
 			return this.statusMap[machine.status]
-		} catch(err) {
+		} catch(err: any) {
 			this.platform.log.error('Error while loading Machine: ', err.message)
 
 			// return an error to show the device as "Not Responding" in the Home app:

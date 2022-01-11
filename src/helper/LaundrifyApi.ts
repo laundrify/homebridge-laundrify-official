@@ -100,7 +100,7 @@ export default class LaundrifyApi {
 			})
 
 			return res
-		} catch(err) {
+		} catch(err: any) {
 			if (retryCtr < maxRetry && !err.message.includes('401')) {
 				const waitTime = (2**retryCtr) * 200		// equals to 200, 400, 800ms
 
@@ -122,7 +122,11 @@ export default class LaundrifyApi {
 			this.pluginConfig = laundrifyConfig
 
 			return true
-		} catch(err) {
+		} catch(err: any) {
+			if (err.code === 'ENOENT') {
+				this.log.debug(`Config file (${this.getConfigFilePath()}) doesn't exist - will be created on plugin init.`)
+				return false
+			}
 			this.log.error(`Error while reading ${this.getConfigFilePath()}: `, err)
 			return false
 		}
@@ -166,7 +170,7 @@ export default class LaundrifyApi {
 				this.log.debug( JSON.stringify(res.data) )
 				return false
 			}
-		} catch(err) {
+		} catch(err: any) {
 			if ( err.message.includes('404') ) {
 				this.log.error(`Registration failed: AuthCode ${this.config.authCode} not found. Please check your config.`)
 			} else {

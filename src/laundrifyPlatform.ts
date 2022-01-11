@@ -116,8 +116,8 @@ export class LaundrifyPlatform implements DynamicPlatformPlugin {
 				}
 
 			})
-		}).catch( err => {
-			this.log.error(`Error while loading Machines from backend: `, err)
+		}).catch( (err: any) => {
+			this.log.error(`Error while loading Machines from backend: `, err.message)
 		})
 	}
 }

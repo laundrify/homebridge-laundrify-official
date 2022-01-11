@@ -9,7 +9,10 @@ import axios from 'axios'
 
 import { LAUNDRIFY_CONFIG_FILE, LAUNDRIFY_BASEURL } from '../settings'
 
+const {version: pluginVersion} = require('../../package.json')
+
 interface LaundrifyConfig {
+	pluginVersion: string
 	updatedAt: string
 	authCode: string
 	accessToken: string
@@ -19,6 +22,7 @@ export default class LaundrifyApi {
 
 	private isInitialized: Promise<boolean>
 	private pluginConfig: LaundrifyConfig = {
+		pluginVersion: '',
 		updatedAt: '',
 		authCode: '',
 		accessToken: '',
@@ -59,6 +63,24 @@ export default class LaundrifyApi {
 			} else {
 				// if authToken has been provided, load the accessToken from the internal config
 				this.readPluginConfig().then( async () => {
+
+					// check if the plugin has been updated
+					if (this.pluginConfig.pluginVersion !== pluginVersion) {
+						this.log.debug(`The configured pluginVersion (${this.pluginConfig.pluginVersion}) doesn't match the current version (${pluginVersion})`)
+
+						if (this.pluginConfig.pluginVersion === '') {
+							this.log.debug(`The configured pluginVersion is an empty string, it's most likely a new installation`)
+						}
+
+						if (this.pluginConfig.pluginVersion === undefined) {
+							this.log.debug(`The configured pluginVersion is undefined, it's most likely <v1.2.0 or earlier`)
+							this.pluginConfig.authCode = this.config.authCode
+						}
+						
+						this.pluginConfig.pluginVersion = pluginVersion
+						await this.writePluginConfig()
+					}
+
 					if (this.pluginConfig.authCode !== this.config.authCode) {
 						this.log.info('The configured AuthCode changed, going to update the plugin config..')
 
@@ -136,12 +158,13 @@ export default class LaundrifyApi {
 		try {
 			const laundrifyConfig = {
 				updatedAt: (new Date()).toISOString(),
+				pluginVersion: this.pluginConfig.pluginVersion,
 				authCode: this.pluginConfig.authCode,
 				accessToken: this.pluginConfig.accessToken,
 			}
 
 			fs.writeJson(this.getConfigFilePath(), laundrifyConfig, { spaces: '\t' })
-			this.log.info(`Config has been written to ${this.getConfigFilePath()}`)
+			this.log.debug(`Config has been written to ${this.getConfigFilePath()}`)
 		} catch(err) {
 			this.log.error(`Error while writing ${this.getConfigFilePath()}: `, err)
 		}

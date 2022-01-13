@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.3.0 (2022-01-13)
+
+ - fix: reauthenticate if AuthCode is changed
+ - feat: persist last pluginVersion to the internal config to detect updates
+ - fix: use chip ID as serial number
+ - chore: update dependencies
+
 ## v1.2.0 (2021-08-04)
 
  - feat: resend request if it failed (max 3 times with exponential backoff)

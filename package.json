@@ -29,10 +29,11 @@
     "laundrify-official"
   ],
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "fs-extra": "^10.0.0"
   },
   "devDependencies": {
+    "@types/fs-extra": "^9.0.13",
     "@types/node": "^14.14.31",
     "@typescript-eslint/eslint-plugin": "^4.16.1",
     "@typescript-eslint/parser": "^4.16.1",

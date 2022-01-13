@@ -24,7 +24,7 @@ export class LaundrifyAccessory {
 		this.accessory.getService(this.platform.Service.AccessoryInformation)!
 			.setCharacteristic(this.platform.Characteristic.Manufacturer, 'laundrify')
 			.setCharacteristic(this.platform.Characteristic.Model, 'WLAN-Adapter')
-			.setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.mac || 'n/a')
+			.setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.chipID || 'n/a')
 			.setCharacteristic(this.platform.Characteristic.FirmwareRevision, accessory.context.device.firmwareVersion || 'n/a')
 
 		// get the ContactSensor service if it exists, otherwise create a new ContactSensor service

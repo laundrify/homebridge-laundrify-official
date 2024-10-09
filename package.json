@@ -12,8 +12,8 @@
     "url": "https://github.com/laundrify/homebridge-laundrify-official/issues"
   },
   "engines": {
-    "node": ">=10.17.0",
-    "homebridge": ">=1.3.0"
+    "homebridge": "^1.6.0 || ^2.0.0-beta.0",
+    "node": "^18.20.4 || ^20.15.1"
   },
   "main": "dist/index.js",
   "scripts": {

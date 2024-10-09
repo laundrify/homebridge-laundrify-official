@@ -11,3 +11,8 @@ export const PLUGIN_NAME = 'homebridge-laundrify-official';
 export const LAUNDRIFY_CONFIG_FILE = '/laundrify-official.json'
 
 export const LAUNDRIFY_BASEURL = 'https://api.laundrify.de'
+
+export const LAUNDRIFY_MODELS = {
+	'SU02': 'WLAN-Adapter classic',
+	'M01': 'WLAN-Adapter mini',
+}

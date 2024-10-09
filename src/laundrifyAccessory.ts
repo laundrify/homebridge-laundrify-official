@@ -1,6 +1,7 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
 import { LaundrifyPlatform } from './laundrifyPlatform'
+import { LAUNDRIFY_MODELS } from './settings'
 
 /**
  * Platform Accessory
@@ -23,7 +24,7 @@ export class LaundrifyAccessory {
 		// set accessory information
 		this.accessory.getService(this.platform.Service.AccessoryInformation)!
 			.setCharacteristic(this.platform.Characteristic.Manufacturer, 'laundrify')
-			.setCharacteristic(this.platform.Characteristic.Model, 'WLAN-Adapter')
+			.setCharacteristic(this.platform.Characteristic.Model, LAUNDRIFY_MODELS[accessory.context.device.model] || 'n/a')
 			.setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.chipID || 'n/a')
 			.setCharacteristic(this.platform.Characteristic.FirmwareRevision, accessory.context.device.firmwareVersion || 'n/a')
 

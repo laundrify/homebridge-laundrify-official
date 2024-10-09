@@ -29,19 +29,19 @@
     "laundrify-official"
   ],
   "dependencies": {
-    "axios": "^0.21.2",
-    "fs-extra": "^10.0.0"
+    "axios": "^1.7.7",
+    "fs-extra": "^11.2.0"
   },
   "devDependencies": {
-    "@types/fs-extra": "^9.0.13",
-    "@types/node": "^14.14.31",
-    "@typescript-eslint/eslint-plugin": "^4.16.1",
-    "@typescript-eslint/parser": "^4.16.1",
-    "eslint": "^7.21.0",
-    "homebridge": "^1.3.1",
-    "nodemon": "^2.0.7",
-    "rimraf": "^3.0.2",
-    "ts-node": "^9.1.1",
-    "typescript": "^4.2.2"
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.7.5",
+    "@typescript-eslint/eslint-plugin": "^8.8.1",
+    "@typescript-eslint/parser": "^8.8.1",
+    "eslint": "^9.12.0",
+    "homebridge": "^1.8.4",
+    "nodemon": "^3.1.7",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
   }
 }

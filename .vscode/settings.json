@@ -1,7 +1,7 @@
 {
   "files.eol": "\n",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": false
+    "source.fixAll.eslint": "never"
   },
   "editor.rulers": [ 140 ],
   "eslint.enable": true

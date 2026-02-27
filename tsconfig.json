@@ -1,13 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES2018", // ~node10
+    "target": "ES2022",
     "module": "commonjs",
     "lib": [
-      "es2015",
-      "es2016",
-      "es2017",
-      "es2018"
+      "es2022"
     ],
+    "skipLibCheck": true,
+    "useDefineForClassFields": false,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,

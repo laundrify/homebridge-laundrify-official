@@ -79,11 +79,6 @@ export default class LaundrifyApi {
 							this.log.debug(`The configured pluginVersion is an empty string, it's most likely a new installation`)
 						}
 
-						if (this.pluginConfig.pluginVersion === undefined) {
-							this.log.debug(`The configured pluginVersion is undefined, it's most likely <v1.2.0 or earlier`)
-							this.pluginConfig.authCode = this.config.authCode
-						}
-						
 						this.pluginConfig.pluginVersion = pluginVersion
 						await this.writePluginConfig()
 					}

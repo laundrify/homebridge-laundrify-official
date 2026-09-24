@@ -17,8 +17,6 @@ export class LaundrifyPlatform implements DynamicPlatformPlugin {
 	// accessory handlers (restored from cache or registered at runtime) by accessory UUID
 	private readonly handlers = new Map<string, LaundrifyAccessory>()
 
-	public readonly laundrifyApi: LaundrifyApi
-
 	private readonly pollInterval: number
 	private pollTimer?: NodeJS.Timeout
 	private failedPolls = 0
@@ -27,10 +25,9 @@ export class LaundrifyPlatform implements DynamicPlatformPlugin {
 		public readonly log: Logger,
 		public readonly config: PlatformConfig,
 		public readonly api: API,
+		public readonly laundrifyApi: LaundrifyApi = new LaundrifyApi(log, config, api),
 	) {
 		this.log.debug('Finished initializing platform:', this.config.name)
-
-		this.laundrifyApi = new LaundrifyApi(log, config, api)
 
 		this.pollInterval = this.config.pollInterval * 1000 || 60000
 

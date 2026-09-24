@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+ - feat: poll all Machines with a single request per interval and answer HomeKit reads from the last known state instead of querying the backend on every read (#3)
+ - feat: Machines added or removed in the laundrify app are registered/unregistered without restarting Homebridge
+ - fix: report accessories as "Not Responding" after 3 consecutive failed polls (until the next successful poll)
+ - fix: use a dedicated axios instance so baseURL and Authorization header don't affect other plugins in the same Homebridge process
+ - fix: await config file writes, check HTTP status codes instead of matching error messages, mask the accessToken in debug output
+ - chore: remove compatibility code for Homebridge <1.3.0 (`.on('get')` fallback) and for plugin configs written before v1.2.0
+ - chore: lint all source files (`src/helper/` was skipped by the previous glob)
+ - note: the state shown in the Home app is now refreshed every `pollInterval` seconds (default 60) instead of on every read
+
 ## v1.5.0 (2026-09-24)
 
  - chore: drop Node 18 and 20 (both EOL), add Node 22, 24 and 26 to supported engines

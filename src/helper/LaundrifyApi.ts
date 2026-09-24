@@ -45,13 +45,13 @@ export default class LaundrifyApi {
 		// handle 401 responses to reset the accessToken
 		this.http.interceptors.response.use(
 			(response) => response,
-			(error) => {
+			async (error) => {
 				// Any status codes that falls outside the range of 2xx cause this function to trigger
-				if (error.response && error.response.status === 401) {
+				if (error.response && error.response.status === 401 && this.pluginConfig.accessToken) {
 					this.log.warn('AccessToken seems to be invalid, going to remove it.')
 
 					this.pluginConfig.accessToken = ''
-					this.writePluginConfig()
+					await this.writePluginConfig()
 				}
 
 				if (typeof error.toJSON === 'function') {
@@ -123,10 +123,16 @@ export default class LaundrifyApi {
 		try {
 			const res = await this.http.request({ method, url })
 
+			if (retryCtr > 0) {
+				this.log.debug(`${method.toUpperCase()} ${url} succeeded at retry #${retryCtr}`)
+			}
+
 			return res
 		} catch(err: any) {
-			if (retryCtr < MAX_RETRIES && !err.message.includes('401')) {
+			if (retryCtr < MAX_RETRIES && err.status !== 401) {
 				const waitTime = (2**retryCtr) * 200		// equals to 200, 400, 800ms
+
+				this.log.debug(`${method.toUpperCase()} ${url} failed (${err.message}), retrying in ${waitTime}ms`)
 
 				await new Promise( resolve => setTimeout(resolve, waitTime) )
 
@@ -141,7 +147,8 @@ export default class LaundrifyApi {
 		try {
 			const laundrifyConfig = await fs.readJson( this.getConfigFilePath() )
 
-			this.log.debug('Read config from disk: ' + JSON.stringify(laundrifyConfig))
+			const maskedConfig = { ...laundrifyConfig, accessToken: laundrifyConfig.accessToken ? '***' : '' }
+			this.log.debug('Read config from disk: ' + JSON.stringify(maskedConfig))
 
 			this.pluginConfig = laundrifyConfig
 
@@ -165,7 +172,7 @@ export default class LaundrifyApi {
 				accessToken: this.pluginConfig.accessToken,
 			}
 
-			fs.writeJson(this.getConfigFilePath(), laundrifyConfig, { spaces: '\t' })
+			await fs.writeJson(this.getConfigFilePath(), laundrifyConfig, { spaces: '\t' })
 			this.log.debug(`Config has been written to ${this.getConfigFilePath()}`)
 		} catch(err) {
 			this.log.error(`Error while writing ${this.getConfigFilePath()}: `, err)
@@ -187,7 +194,7 @@ export default class LaundrifyApi {
 				this.log.info('Registration successful.')
 
 				this.pluginConfig.accessToken = res.data.token
-				this.writePluginConfig()
+				await this.writePluginConfig()
 
 				return true
 			} else {
@@ -196,7 +203,7 @@ export default class LaundrifyApi {
 				return false
 			}
 		} catch(err: any) {
-			if ( err.message.includes('404') ) {
+			if (err.status === 404) {
 				this.log.error(`Registration failed: AuthCode ${this.config.authCode} not found. Please check your config.`)
 			} else {
 				this.log.error(`Registration failed: `, err)

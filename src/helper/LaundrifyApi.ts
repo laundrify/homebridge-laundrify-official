@@ -11,6 +11,8 @@ import { LAUNDRIFY_CONFIG_FILE, LAUNDRIFY_BASEURL } from '../settings'
 
 const {version: pluginVersion} = require('../../package.json')
 
+const MAX_RETRIES = 3
+
 interface LaundrifyConfig {
 	pluginVersion: string
 	updatedAt: string
@@ -20,7 +22,7 @@ interface LaundrifyConfig {
 
 export default class LaundrifyApi {
 
-	private isInitialized: Promise<boolean>
+	public readonly isInitialized: Promise<boolean>
 	private http: AxiosInstance
 	private pluginConfig: LaundrifyConfig = {
 		pluginVersion: '',
@@ -118,22 +120,22 @@ export default class LaundrifyApi {
 		return this.api.user.storagePath() + LAUNDRIFY_CONFIG_FILE
 	}
 
-	async sendRequest(method, url, options = {}, maxRetry = 3, retryCtr = 0) {
+	async sendRequest(method, url, retryCtr = 0) {
+		if (!(await this.isInitialized)) {
+			throw new Error('laundrify API is not initialized')
+		}
+
 		try {
-			const res = await this.http.request({
-				method,
-				url,
-				...options,
-			})
+			const res = await this.http.request({ method, url })
 
 			return res
 		} catch(err: any) {
-			if (retryCtr < maxRetry && !err.message.includes('401')) {
+			if (retryCtr < MAX_RETRIES && !err.message.includes('401')) {
 				const waitTime = (2**retryCtr) * 200		// equals to 200, 400, 800ms
 
 				await new Promise( resolve => setTimeout(resolve, waitTime) )
 
-				return this.sendRequest(method, url, options, maxRetry, ++retryCtr)
+				return this.sendRequest(method, url, ++retryCtr)
 			} else {
 				throw err
 			}
@@ -209,26 +211,7 @@ export default class LaundrifyApi {
 	}
 
 	async loadMachines() {
-		const isInitialized = await this.isInitialized
-
-		if (!isInitialized) {
-			this.log.warn('Cannot load Machines since laundrify API is not initialized')
-			return []
-		}
-
-		const res = await axios.get('/api/machines')
-
-		return res.data
-	}
-
-	async loadMachine(_machine) {
-		if (!this.pluginConfig.accessToken) {
-			throw new Error(`AccessToken is missing!`)
-		}
-
-		const res = await this.sendRequest('GET', `/api/machines/${_machine}`, {
-			timeout: 5000,
-		})
+		const res = await this.sendRequest('GET', '/api/machines')
 
 		return res.data
 	}

@@ -1,4 +1,4 @@
-import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
+import { Service, PlatformAccessory } from 'homebridge';
 
 import { LaundrifyPlatform } from './laundrifyPlatform'
 import { LAUNDRIFY_MODELS } from './settings'
@@ -7,6 +7,9 @@ import { LAUNDRIFY_MODELS } from './settings'
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
+ *
+ * HomeKit reads are answered by HAP-NodeJS from the last value pushed via `update()`,
+ * so no GET handler is registered and the backend is never queried on a read.
  */
 export class LaundrifyAccessory {
 	private service: Service;
@@ -18,15 +21,10 @@ export class LaundrifyAccessory {
 
 	constructor(
 		private readonly platform: LaundrifyPlatform,
-		private readonly accessory: PlatformAccessory,
+		public readonly accessory: PlatformAccessory,
 	) {
-
-		// set accessory information
 		this.accessory.getService(this.platform.Service.AccessoryInformation)!
 			.setCharacteristic(this.platform.Characteristic.Manufacturer, 'laundrify')
-			.setCharacteristic(this.platform.Characteristic.Model, LAUNDRIFY_MODELS[accessory.context.device.model] || 'n/a')
-			.setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.chipID || 'n/a')
-			.setCharacteristic(this.platform.Characteristic.FirmwareRevision, accessory.context.device.firmwareVersion || 'n/a')
 
 		// get the ContactSensor service if it exists, otherwise create a new ContactSensor service
 		// you can create multiple services for each accessory
@@ -36,16 +34,6 @@ export class LaundrifyAccessory {
 		// set the service name, this is what is displayed as the default name on the Home app
 		this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name)
 
-		// register handlers for the ContactSensorState characteristic
-		const sensorState = this.service.getCharacteristic(this.platform.Characteristic.ContactSensorState)
-
-		// check if onGet() handler is available (Homebridge v1.3.0+) or use fallback
-		if (typeof sensorState.onGet === 'function') {
-			sensorState.onGet( () => this.handleGetValue() )
-		} else {
-			sensorState.on('get', (cb) => this.syncHandleGetValue(cb))
-		}
-
 		if (this.platform.config.invertStatus) {
 			this.statusMap = {
 				'ON': this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED,
@@ -53,65 +41,37 @@ export class LaundrifyAccessory {
 			}
 		}
 
-		// Frequently poll the current status of the Machine
-		let pollInterval = this.platform.config.pollInterval * 1000 || 60000
-
-		if (pollInterval < 10000) {
-			this.platform.log.warn('The configured pollInterval is below the minimum of 10s!')
-			this.platform.log.warn('Using the default value of 60s instead.')
-			pollInterval = 60000
-		}
-
-		setInterval( async () => {
-			try {
-				const machine = await this.platform.laundrifyApi.loadMachine( this.accessory.context.device._id )
-
-				this.service.updateCharacteristic(this.platform.Characteristic.ContactSensorState, this.statusMap[machine.status])
-			} catch(err: any) {
-				this.platform.log.error('Error while polling Machine status: ', err.message)
-			}
-		}, pollInterval)
+		this.update(accessory.context.device)
 	}
 
 	/**
-	 * Handle the "GET" requests from HomeKit
-	 * These are sent when HomeKit wants to know the current state of the accessory, for example, checking if a Light bulb is on.
-	 *
-	 * GET requests should return as fast as possbile. A long delay here will result in
-	 * HomeKit being unresponsive and a bad user experience in general.
-	 *
-	 * If your device takes time to respond you should update the status of your device
-	 * asynchronously instead using the `updateCharacteristic` method instead.
-
-	 * @example
-	 * this.service.updateCharacteristic(this.platform.Characteristic.On, true)
+	 * Apply the latest Machine data (as polled by the platform) and push it to HomeKit
 	 */
-	async handleGetValue(): Promise<CharacteristicValue> {
-		try {
-			const machine = await this.platform.laundrifyApi.loadMachine( this.accessory.context.device._id )
+	update(machine) {
+		this.accessory.context.device = machine
 
-			this.platform.log.debug(`Machine ${machine._id} is currently ${machine.status}`)
+		this.accessory.getService(this.platform.Service.AccessoryInformation)!
+			.updateCharacteristic(this.platform.Characteristic.Model, LAUNDRIFY_MODELS[machine.model] || 'n/a')
+			.updateCharacteristic(this.platform.Characteristic.SerialNumber, machine.chipID || 'n/a')
+			.updateCharacteristic(this.platform.Characteristic.FirmwareRevision, machine.firmwareVersion || 'n/a')
 
-			return this.statusMap[machine.status]
-		} catch(err: any) {
-			this.platform.log.error('Error while loading Machine: ', err.message)
+		const state = this.statusMap[machine.status]
 
-			// return an error to show the device as "Not Responding" in the Home app:
-			throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE)
+		if (state === undefined) {
+			this.platform.log.warn(`Machine ${machine._id} reported an unknown status (${machine.status}), keeping the previous state`)
+			return
 		}
+
+		this.service.updateCharacteristic(this.platform.Characteristic.ContactSensorState, state)
 	}
 
-	syncHandleGetValue(cb) {
-		this.platform.laundrifyApi.loadMachine( this.accessory.context.device._id )
-			.then( (machine) => {
-				this.platform.log.debug(`Machine ${machine._id} is currently ${machine.status}`)
-
-				cb(null, this.statusMap[machine.status])
-			})
-			.catch( err => {
-				this.platform.log.error('Error while sync loading Machine: ', err)
-
-				cb(err, null)
-			})
+	/**
+	 * Show the accessory as "Not Responding" in the Home app until the next `update()`
+	 */
+	setUnreachable() {
+		this.service.updateCharacteristic(
+			this.platform.Characteristic.ContactSensorState,
+			new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE),
+		)
 	}
 }

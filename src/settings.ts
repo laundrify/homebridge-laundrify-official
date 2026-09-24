@@ -16,3 +16,6 @@ export const LAUNDRIFY_MODELS = {
 	'SU02': 'WLAN-Adapter classic',
 	'M01': 'WLAN-Adapter mini',
 }
+
+// consecutive failed polls before the accessories are reported as "Not Responding"
+export const MAX_FAILED_POLLS = 3

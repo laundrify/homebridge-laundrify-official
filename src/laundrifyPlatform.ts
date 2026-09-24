@@ -1,6 +1,6 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge'
 
-import { PLATFORM_NAME, PLUGIN_NAME } from './settings'
+import { PLATFORM_NAME, PLUGIN_NAME, MAX_FAILED_POLLS } from './settings'
 import { LaundrifyAccessory } from './laundrifyAccessory'
 
 import LaundrifyApi from './helper/LaundrifyApi'
@@ -14,10 +14,14 @@ export class LaundrifyPlatform implements DynamicPlatformPlugin {
 	public readonly Service: typeof Service = this.api.hap.Service
 	public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic
 
-	// this is used to track restored cached accessories
-	public readonly accessories: PlatformAccessory[] = []
+	// accessory handlers (restored from cache or registered at runtime) by accessory UUID
+	private readonly handlers = new Map<string, LaundrifyAccessory>()
 
-	public laundrifyApi
+	public readonly laundrifyApi: LaundrifyApi
+
+	private readonly pollInterval: number
+	private pollTimer?: NodeJS.Timeout
+	private failedPolls = 0
 
 	constructor(
 		public readonly log: Logger,
@@ -26,19 +30,32 @@ export class LaundrifyPlatform implements DynamicPlatformPlugin {
 	) {
 		this.log.debug('Finished initializing platform:', this.config.name)
 
-		// initUtils(this.log, this.api.user.storagePath())
-
 		this.laundrifyApi = new LaundrifyApi(log, config, api)
+
+		this.pollInterval = this.config.pollInterval * 1000 || 60000
+
+		if (this.pollInterval < 10000) {
+			this.log.warn('The configured pollInterval is below the minimum of 10s!')
+			this.log.warn('Using the default value of 60s instead.')
+			this.pollInterval = 60000
+		}
 
 		// When this event is fired it means Homebridge has restored all cached accessories from disk.
 		// Dynamic Platform plugins should only register new accessories after this event was fired,
 		// in order to ensure they weren't added to homebridge already. This event can also be used
 		// to start discovery of new accessories.
-		this.api.on('didFinishLaunching', () => {
+		this.api.on('didFinishLaunching', async () => {
 			log.debug('Executed didFinishLaunching callback')
-			// run the method to discover / register your devices as accessories
-			this.discoverDevices()
+
+			if (!(await this.laundrifyApi.isInitialized)) {
+				this.log.warn('laundrify API is not initialized, Machines will not be polled. Please check your config.')
+				return
+			}
+
+			this.poll()
 		})
+
+		this.api.on('shutdown', () => clearTimeout(this.pollTimer))
 	}
 
 	/**
@@ -48,76 +65,76 @@ export class LaundrifyPlatform implements DynamicPlatformPlugin {
 	configureAccessory(accessory: PlatformAccessory) {
 		this.log.info('Loading accessory from cache:', accessory.displayName)
 
-		// add the restored accessory to the accessories cache so we can track if it has already been registered
-		this.accessories.push(accessory)
+		this.handlers.set(accessory.UUID, new LaundrifyAccessory(this, accessory))
 	}
 
 	/**
-	 * Accessories must only be registered once, previously created accessories
-	 * must not be registered again to prevent "duplicate UUID" errors.
+	 * Load all Machines from the backend (a single request) and reconcile the accessories with them.
+	 * The next poll is scheduled once this one has finished, so polls never overlap.
 	 */
-	discoverDevices() {
-		this.laundrifyApi.loadMachines().then( machines => {
-			this.log.info(`Retrieved ${machines.length} Machines (${machines.map(m => m._id).join(', ')}) from backend`)
+	async poll() {
+		try {
+			const machines = await this.laundrifyApi.loadMachines()
 
-			// loop over the discovered devices and register each one if it has not already been registered
-			for (const machine of machines) {
-				// generate a unique id for the accessory
-				const uuid = this.api.hap.uuid.generate(machine._id)
+			this.failedPolls = 0
 
-				// see if an accessory with the same uuid has already been registered and restored from
-				// the cached devices we stored in the `configureAccessory` method above
-				const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid)
+			// the very first poll is the initial discovery, log it as info
+			const logLevel = this.pollTimer ? 'debug' : 'info'
+			const summary = machines.map(m => `${m._id}=${m.status}`).join(', ')
+			this.log[logLevel](`Retrieved ${machines.length} Machines (${summary}) from backend`)
 
-				if (existingAccessory) {
-					// the accessory already exists
-					this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName)
+			this.reconcile(machines)
+		} catch(err: any) {
+			this.failedPolls++
+			this.log.error(`Error while loading Machines from backend (${this.failedPolls} consecutive failures): `, err.message)
 
-					// if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
-					existingAccessory.context.device = machine
-					this.api.updatePlatformAccessories([existingAccessory])
+			if (this.failedPolls >= MAX_FAILED_POLLS) {
+				this.handlers.forEach( handler => handler.setUnreachable() )
+			}
+		} finally {
+			this.pollTimer = setTimeout( () => this.poll(), this.pollInterval )
+		}
+	}
 
-					// create the accessory handler for the restored accessory
-					// this is imported from `platformAccessory.ts`
-					new LaundrifyAccessory(this, existingAccessory)
+	/**
+	 * Push the polled Machine data to the known accessories, register accessories for new Machines
+	 * and unregister accessories whose Machine is no longer returned from the backend.
+	 * Accessories must only be registered once, so restored ones are looked up by their UUID.
+	 */
+	reconcile(machines) {
+		const returnedUuids = new Set<string>()
 
-					// it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-					// remove platform accessories when no longer present
-					// this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory])
-					// this.log.info('Removing existing accessory from cache:', existingAccessory.displayName)
-				} else {
-					// the accessory does not yet exist, so we need to create it
-					this.log.info('Adding new accessory:', machine.name)
+		for (const machine of machines) {
+			// generate a unique id for the accessory
+			const uuid = this.api.hap.uuid.generate(machine._id)
+			returnedUuids.add(uuid)
 
-					// create a new accessory
-					const accessory = new this.api.platformAccessory(machine.name, uuid)
+			const handler = this.handlers.get(uuid)
 
-					// store a copy of the device object in the `accessory.context`
-					// the `context` property can be used to store any data about the accessory you may need
-					accessory.context.device = machine
-
-					// create the accessory handler for the newly create accessory
-					// this is imported from `platformAccessory.ts`
-					new LaundrifyAccessory(this, accessory)
-
-					// link the accessory to your platform
-					this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory])
-				}
+			if (handler) {
+				handler.update(machine)
+				continue
 			}
 
-			// delete accessories that have been removed from this account
-			this.accessories.forEach( cachedAccessory => {
-				const cachedMachine = cachedAccessory.context.device
-				const isObsolete = machines.findIndex( m => cachedMachine._id === m._id ) === -1
+			this.log.info('Adding new accessory:', machine.name)
 
-				if (isObsolete) {
-					this.log.warn(`Removing Machine ${cachedMachine._id} from cache since it hasn't been returned from backend`)
-					this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [cachedAccessory])
-				}
+			// store the Machine in the accessory `context`, which Homebridge persists to the accessory cache
+			const accessory = new this.api.platformAccessory(machine.name, uuid)
+			accessory.context.device = machine
 
-			})
-		}).catch( (err: any) => {
-			this.log.error(`Error while loading Machines from backend: `, err.message)
-		})
+			this.handlers.set(uuid, new LaundrifyAccessory(this, accessory))
+			this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory])
+		}
+
+		// remove accessories whose Machine hasn't been returned from the backend (e.g. removed in the laundrify app)
+		for (const [uuid, handler] of this.handlers) {
+			if (returnedUuids.has(uuid)) {
+				continue
+			}
+
+			this.log.warn(`Removing ${handler.accessory.displayName} since its Machine hasn't been returned from backend`)
+			this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [handler.accessory])
+			this.handlers.delete(uuid)
+		}
 	}
 }

@@ -1,0 +1,18 @@
+{
+  "bridge": {
+    "name": "Homebridge Dev",
+    "username": "0E:AA:BB:CC:DD:01",
+    "port": 51999,
+    "pin": "111-22-333"
+  },
+  "accessories": [],
+  "platforms": [
+    {
+      "platform": "laundrify",
+      "name": "laundrify",
+      "authCode": "123-456",
+      "pollInterval": 10,
+      "baseUrl": "http://localhost:4999"
+    }
+  ]
+}

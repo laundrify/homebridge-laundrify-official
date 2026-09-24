@@ -24,7 +24,9 @@
   ],
   "scripts": {
     "lint": "eslint \"src/**/*.ts\" --max-warnings=0",
-    "watch": "npm run build && npm link && nodemon",
+    "mock": "ts-node -P tsconfig.test.json test/mock-backend/cli.ts",
+    "dev": "npm run build && homebridge -D -U ./test/hbConfig -P ..",
+    "watch": "nodemon",
     "build": "rimraf ./dist && tsc",
     "prepublishOnly": "npm run lint && npm run build"
   },

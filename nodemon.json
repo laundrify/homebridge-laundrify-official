@@ -4,7 +4,7 @@
   ],
   "ext": "ts",
   "ignore": [],
-  "exec": "tsc && hb-service restart",
+  "exec": "npm run dev",
   "signal": "SIGTERM",
   "env": {
     "NODE_OPTIONS": "--trace-warnings"

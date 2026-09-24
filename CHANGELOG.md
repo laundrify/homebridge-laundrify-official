@@ -9,6 +9,7 @@
  - fix: await config file writes, check HTTP status codes instead of matching error messages, mask the accessToken in debug output
  - chore: remove compatibility code for Homebridge <1.3.0 (`.on('get')` fallback) and for plugin configs written before v1.2.0
  - chore: lint all source files (`src/helper/` was skipped by the previous glob)
+ - chore: add a mock backend and a local dev Homebridge setup (`npm run mock`, `npm run dev`)
  - note: the state shown in the Home app is now refreshed every `pollInterval` seconds (default 60) instead of on every read
 
 ## v1.5.0 (2026-09-24)

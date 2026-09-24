@@ -1,0 +1,4 @@
+# Homebridge writes its runtime state (pairing keys, accessory cache, the plugin's token file) next to config.json
+*
+!.gitignore
+!config.json

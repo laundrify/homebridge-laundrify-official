@@ -1,12 +1,14 @@
 # Changelog
 
-## v1.5.0 (2026-02-27)
+## v1.5.0 (2026-09-24)
 
- - chore: add Node 22 to supported engines
- - chore: upgrade homebridge devDependency to v2.0.0-beta.75 (Node 22 compatible)
- - chore: upgrade eslint to v9.39.3 and @typescript-eslint packages to v8.56.1
+ - chore: drop Node 18 and 20 (both EOL), add Node 22, 24 and 26 to supported engines
+ - chore: bump homebridge devDependency to v2.4.0 for Homebridge v2 type-checking
+ - chore: update engines.homebridge to `^1.6.0 || ^2.0.0` (drop `-beta.0`)
+ - chore: bump axios to ^1.18.1 to resolve npm audit vulnerabilities (SSRF, DoS, prototype pollution)
+ - chore: bump eslint to ^9.39.0 and @typescript-eslint packages to ^8.62.1
  - chore: update tsconfig target to ES2022, add skipLibCheck and useDefineForClassFields
- - fix: resolve npm audit vulnerabilities (10 vulnerabilities across axios, form-data, minimatch and others)
+ - thanks to @konradlang for the groundwork in #7
 
 ## v1.3.0 (2022-01-13)
 

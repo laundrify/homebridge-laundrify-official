@@ -69,7 +69,10 @@ Don't forget to restart Homebridge after saving the configuration.
 ## Plugin Development
 
 - Install dependencies using `npm i`
-- Build and link the Plugin
-  - using `npm run watch` for automatic builds
-  - or `npm run build && npm link` for a manual build
-- Publish Package using `npm publish` (don't forget to update the version number in `package[-lock].json`)
+- Run the checks: `npm run lint`, `npm run typecheck`, `npm test` and `npm run build`
+- Develop against the local mock backend:
+  - `npm run mock` starts a stand-in for the laundrify API on port 4999 (see `test/mock-backend/server.ts` for its control endpoints)
+  - `npm run dev` starts a Homebridge instance in debug mode with the plugin and the config in `test/hbConfig/`
+  - `npm run watch` does the same and restarts on every source change
+- To test against the real laundrify API, link the plugin into a regular Homebridge installation (`npm run build && npm link`) and configure an AuthCode from the laundrify App
+- Publish using `npm publish` (bump the version number in `package[-lock].json` and turn the `Unreleased` section of the changelog into the release entry first)

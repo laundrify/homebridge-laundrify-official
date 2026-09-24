@@ -5,7 +5,7 @@ import {
 } from 'homebridge'
 
 import fs from 'fs-extra'
-import axios from 'axios'
+import axios, { AxiosInstance } from 'axios'
 
 import { LAUNDRIFY_CONFIG_FILE, LAUNDRIFY_BASEURL } from '../settings'
 
@@ -21,6 +21,7 @@ interface LaundrifyConfig {
 export default class LaundrifyApi {
 
 	private isInitialized: Promise<boolean>
+	private http: AxiosInstance
 	private pluginConfig: LaundrifyConfig = {
 		pluginVersion: '',
 		updatedAt: '',
@@ -33,10 +34,14 @@ export default class LaundrifyApi {
 		private readonly config: PlatformConfig,
 		private readonly api: API,
 	) {
-		axios.defaults.baseURL = this.config.baseUrl || LAUNDRIFY_BASEURL
+		// dedicated instance, so baseURL and Authorization header don't leak into other plugins sharing this process
+		this.http = axios.create({
+			baseURL: this.config.baseUrl || LAUNDRIFY_BASEURL,
+			timeout: 5000,
+		})
 
 		// handle 401 responses to reset the accessToken
-		axios.interceptors.response.use(
+		this.http.interceptors.response.use(
 			(response) => response,
 			(error) => {
 				// Any status codes that falls outside the range of 2xx cause this function to trigger
@@ -101,7 +106,7 @@ export default class LaundrifyApi {
 					}
 
 					// set Authorization header to use the accessToken for all requests
-					axios.defaults.headers.common['Authorization'] = 'Bearer hb|' + this.pluginConfig.accessToken
+					this.http.defaults.headers.common['Authorization'] = 'Bearer hb|' + this.pluginConfig.accessToken
 
 					return resolve(true)
 				})
@@ -115,7 +120,7 @@ export default class LaundrifyApi {
 
 	async sendRequest(method, url, options = {}, maxRetry = 3, retryCtr = 0) {
 		try {
-			const res = await axios.request({
+			const res = await this.http.request({
 				method,
 				url,
 				...options,
@@ -179,7 +184,7 @@ export default class LaundrifyApi {
 		}
 
 		try {
-			const res = await axios.post(`/auth/homebridge/token`, {authCode: this.config.authCode})
+			const res = await this.http.post(`/auth/homebridge/token`, {authCode: this.config.authCode})
 
 			if (res.data && res.data.token) {
 				this.log.info('Registration successful.')

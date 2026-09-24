@@ -23,12 +23,14 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "lint": "eslint \"src/**/*.ts\" --max-warnings=0",
+    "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\" --max-warnings=0",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run",
     "mock": "ts-node -P tsconfig.test.json test/mock-backend/cli.ts",
     "dev": "npm run build && homebridge -D -U ./test/hbConfig -P ..",
     "watch": "nodemon",
     "build": "rimraf ./dist && tsc",
-    "prepublishOnly": "npm run lint && npm run build"
+    "prepublishOnly": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "keywords": [
     "homebridge",
@@ -41,6 +43,7 @@
     "fs-extra": "^11.2.0"
   },
   "devDependencies": {
+    "@homebridge/hap-nodejs": "2.2.2",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.7.5",
     "@typescript-eslint/eslint-plugin": "^8.62.1",
@@ -50,6 +53,7 @@
     "nodemon": "^3.1.7",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^5.0.1"
   }
 }

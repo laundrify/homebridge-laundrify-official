@@ -25,6 +25,12 @@ jobs:
       - name: Lint the project
         run: npm run lint
 
+      - name: Type-check the project and its tests
+        run: npm run typecheck
+
+      - name: Test the project
+        run: npm test
+
       - name: Build the project
         run: npm run build
         env:

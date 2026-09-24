@@ -10,6 +10,7 @@
  - chore: remove compatibility code for Homebridge <1.3.0 (`.on('get')` fallback) and for plugin configs written before v1.2.0
  - chore: lint all source files (`src/helper/` was skipped by the previous glob)
  - chore: add a mock backend and a local dev Homebridge setup (`npm run mock`, `npm run dev`)
+ - chore: add a test suite (`npm test`, also run in CI)
  - note: the state shown in the Home app is now refreshed every `pollInterval` seconds (default 60) instead of on every read
 
 ## v1.5.0 (2026-09-24)

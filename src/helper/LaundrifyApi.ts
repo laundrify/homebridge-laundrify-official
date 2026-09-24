@@ -9,6 +9,7 @@ import axios, { AxiosInstance } from 'axios'
 
 import { LAUNDRIFY_CONFIG_FILE, LAUNDRIFY_BASEURL } from '../settings'
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- package.json lives outside rootDir, so it can't be imported
 const {version: pluginVersion} = require('../../package.json')
 
 const MAX_RETRIES = 3
@@ -73,7 +74,8 @@ export default class LaundrifyApi {
 
 					// check if the plugin has been updated
 					if (this.pluginConfig.pluginVersion !== pluginVersion) {
-						this.log.debug(`The configured pluginVersion (${this.pluginConfig.pluginVersion}) doesn't match the current version (${pluginVersion})`)
+						this.log.debug(`The configured pluginVersion (${this.pluginConfig.pluginVersion}) ` +
+							`doesn't match the current version (${pluginVersion})`)
 
 						if (this.pluginConfig.pluginVersion === '') {
 							this.log.debug(`The configured pluginVersion is an empty string, it's most likely a new installation`)

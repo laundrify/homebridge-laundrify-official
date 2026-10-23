@@ -5,13 +5,14 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ChildProcess, spawn } from 'child_process'
 import { once } from 'events'
-import fs from 'fs-extra'
+import fs from 'fs'
 import net from 'net'
 import os from 'os'
 import path from 'path'
 import { Characteristic, HAPStatus, Service, uuid } from '@homebridge/hap-nodejs'
 
 import { LAUNDRIFY_CONFIG_FILE, PLATFORM_NAME } from '../../src/settings'
+import { readJson } from '../helpers'
 import { createMockBackend, MockBackend, MockMachine } from '../mock-backend/server'
 
 const ROOT = path.join(__dirname, '../..')
@@ -109,12 +110,12 @@ describe('Homebridge with the plugin', { timeout: 60000 }, () => {
 		storagePath = fs.mkdtempSync(path.join(os.tmpdir(), 'laundrify-e2e-'))
 		bridgePort = await freePort()
 
-		fs.writeJsonSync(path.join(storagePath, 'config.json'), {
+		fs.writeFileSync(path.join(storagePath, 'config.json'), JSON.stringify({
 			bridge: { name: 'Homebridge E2E', username: '0E:E2:E0:00:00:01', port: bridgePort, pin: '031-45-154' },
 			platforms: [{
 				platform: PLATFORM_NAME, name: 'laundrify', authCode: mock.authCode, pollInterval: POLL_INTERVAL / 1000, baseUrl: mock.url,
 			}],
-		})
+		}))
 
 		await startHomebridge()
 	}, 30000)
@@ -126,7 +127,7 @@ describe('Homebridge with the plugin', { timeout: 60000 }, () => {
 	afterAll(async () => {
 		await stopHomebridge()
 		await mock.close()
-		fs.removeSync(storagePath)
+		fs.rmSync(storagePath, { recursive: true, force: true })
 
 		if (failed) {
 			process.stderr.write(`\n----- Homebridge output -----\n${output}\n-----------------------------\n`)
@@ -135,7 +136,7 @@ describe('Homebridge with the plugin', { timeout: 60000 }, () => {
 
 	it('registers with the AuthCode and exposes every machine as a contact sensor', async () => {
 		expect(mock.requests.filter(r => r.url === '/auth/homebridge/token')).toHaveLength(1)
-		expect(fs.readJsonSync(storagePath + LAUNDRIFY_CONFIG_FILE)).toMatchObject({ authCode: mock.authCode, accessToken: mock.token })
+		expect(readJson(storagePath + LAUNDRIFY_CONFIG_FILE)).toMatchObject({ authCode: mock.authCode, accessToken: mock.token })
 
 		expect(await sensors()).toEqual([
 			{
@@ -186,7 +187,7 @@ describe('Homebridge with the plugin', { timeout: 60000 }, () => {
 		mock.mode = 'unauth'
 
 		await vi.waitFor(() => {
-			expect(fs.readJsonSync(storagePath + LAUNDRIFY_CONFIG_FILE).accessToken).toBe('')
+			expect(readJson(storagePath + LAUNDRIFY_CONFIG_FILE).accessToken).toBe('')
 		}, { timeout: POLL_INTERVAL + 5000, interval: 500 })
 
 		mock.mode = 'ok'

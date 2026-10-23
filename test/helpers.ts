@@ -1,8 +1,11 @@
 import { EventEmitter } from 'events'
+import fs from 'fs'
 import { vi } from 'vitest'
 import * as hap from '@homebridge/hap-nodejs'
 import type { API, Logger } from 'homebridge'
 import type LaundrifyApi from '../src/helper/LaundrifyApi'
+
+export const readJson = (file: string) => JSON.parse(fs.readFileSync(file, 'utf8'))
 
 export const createLogger = () => ({
 	info: vi.fn(),

@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import fs from 'fs-extra'
+import fs from 'fs'
 import os from 'os'
 import path from 'path'
 
 import LaundrifyApi from '../src/helper/LaundrifyApi'
 import { LAUNDRIFY_CONFIG_FILE, PLATFORM_NAME } from '../src/settings'
-import { createApi, createLogger } from './helpers'
+import { createApi, createLogger, readJson } from './helpers'
 import { createMockBackend, MockBackend } from './mock-backend/server'
 
-const { version } = fs.readJsonSync(path.join(__dirname, '../package.json'))
+const { version } = readJson(path.join(__dirname, '../package.json'))
 
 describe('LaundrifyApi', () => {
 	let mock: MockBackend
@@ -16,7 +16,7 @@ describe('LaundrifyApi', () => {
 	let log: ReturnType<typeof createLogger>
 
 	const configFile = () => storagePath + LAUNDRIFY_CONFIG_FILE
-	const writeConfig = (config) => fs.writeJsonSync(configFile(), { pluginVersion: version, ...config })
+	const writeConfig = (config) => fs.writeFileSync(configFile(), JSON.stringify({ pluginVersion: version, ...config }))
 	const create = (config = {}) => new LaundrifyApi(log, { platform: PLATFORM_NAME, baseUrl: mock.url, ...config }, createApi(storagePath))
 	const requests = (method: string, url: string) => mock.requests.filter(r => r.method === method && r.url === url)
 
@@ -29,7 +29,7 @@ describe('LaundrifyApi', () => {
 	afterEach(async () => {
 		vi.useRealTimers()
 		await mock.close()
-		fs.removeSync(storagePath)
+		fs.rmSync(storagePath, { recursive: true, force: true })
 	})
 
 	it('registers with the AuthCode on the first start and persists the token', async () => {
@@ -38,7 +38,7 @@ describe('LaundrifyApi', () => {
 		await expect(api.isInitialized).resolves.toBe(true)
 
 		expect(requests('POST', '/auth/homebridge/token')).toHaveLength(1)
-		expect(fs.readJsonSync(configFile())).toMatchObject({ pluginVersion: version, authCode: '123-456', accessToken: 'mock-token' })
+		expect(readJson(configFile())).toMatchObject({ pluginVersion: version, authCode: '123-456', accessToken: 'mock-token' })
 	})
 
 	it('sends the token with every request and returns the machines', async () => {
@@ -63,7 +63,7 @@ describe('LaundrifyApi', () => {
 		await expect(api.isInitialized).resolves.toBe(true)
 
 		expect(requests('POST', '/auth/homebridge/token')).toHaveLength(1)
-		expect(fs.readJsonSync(configFile())).toMatchObject({ authCode: '123-456', accessToken: 'mock-token' })
+		expect(readJson(configFile())).toMatchObject({ authCode: '123-456', accessToken: 'mock-token' })
 	})
 
 	it('rejects a malformed AuthCode without contacting the backend', async () => {
@@ -114,7 +114,7 @@ describe('LaundrifyApi', () => {
 
 		await expect(api.loadMachines()).rejects.toMatchObject({ status: 401 })
 		expect(requests('GET', '/api/machines')).toHaveLength(1)
-		expect(fs.readJsonSync(configFile()).accessToken).toBe('')
+		expect(readJson(configFile()).accessToken).toBe('')
 		expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('AccessToken seems to be invalid'))
 	})
 

@@ -4,7 +4,7 @@ import {
 	PlatformConfig,
 } from 'homebridge'
 
-import fs from 'fs-extra'
+import { readFile, writeFile } from 'fs/promises'
 import axios, { AxiosInstance } from 'axios'
 
 import { LAUNDRIFY_CONFIG_FILE, LAUNDRIFY_BASEURL } from '../settings'
@@ -147,7 +147,7 @@ export default class LaundrifyApi {
 
 	async readPluginConfig() {
 		try {
-			const laundrifyConfig = await fs.readJson( this.getConfigFilePath() )
+			const laundrifyConfig = JSON.parse(await readFile(this.getConfigFilePath(), 'utf8'))
 
 			const maskedConfig = { ...laundrifyConfig, accessToken: laundrifyConfig.accessToken ? '***' : '' }
 			this.log.debug('Read config from disk: ' + JSON.stringify(maskedConfig))
@@ -174,7 +174,7 @@ export default class LaundrifyApi {
 				accessToken: this.pluginConfig.accessToken,
 			}
 
-			await fs.writeJson(this.getConfigFilePath(), laundrifyConfig, { spaces: '\t' })
+			await writeFile(this.getConfigFilePath(), JSON.stringify(laundrifyConfig, null, '\t') + '\n')
 			this.log.debug(`Config has been written to ${this.getConfigFilePath()}`)
 		} catch(err) {
 			this.log.error(`Error while writing ${this.getConfigFilePath()}: `, err)

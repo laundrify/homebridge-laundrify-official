@@ -7,6 +7,8 @@ interval and pushes state to HomeKit; reads never hit the backend.
 ## Commands
 
 - `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`: all four run in CI and in `prepublishOnly`.
+- `npm run test:e2e`: builds, then runs `dist/` in a real Homebridge child process against the in-process mock and
+  asserts on the bridge's HAP server (`-I`, plain HTTP). About 1.5 min because `pollInterval` can't go below 10s. Runs in CI.
 - `npm run mock`: local stand-in for the laundrify API on port 4999 (`test/mock-backend/server.ts` documents its
   control endpoints for switching failure modes and machine lists at runtime).
 - `npm run dev`: foreground Homebridge in debug mode with the plugin, using `test/hbConfig/` and the mock.

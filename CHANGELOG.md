@@ -11,6 +11,7 @@
  - chore: lint all source files (`src/helper/` was skipped by the previous glob)
  - chore: add a mock backend and a local dev Homebridge setup (`npm run mock`, `npm run dev`)
  - chore: add a test suite (`npm test`, also run in CI)
+ - chore: add an end-to-end test that runs the plugin in a real Homebridge against the mock backend (`npm run test:e2e`, also run in CI)
  - note: the state shown in the Home app is now refreshed every `pollInterval` seconds (default 60) instead of on every read
 
 ## v1.5.0 (2026-09-24)

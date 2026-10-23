@@ -13,6 +13,8 @@
  - chore: add a test suite (`npm test`, also run in CI)
  - chore: add a weekly workflow in which Claude fixes `npm audit` findings and opens a pull request with a risk rating
  - chore: add an end-to-end test that runs the plugin in a real Homebridge against the mock backend (`npm run test:e2e`, also run in CI)
+ - fix: bump axios to ^1.20.0 (and follow-redirects to 1.16.1 in the lockfile) to resolve npm audit vulnerabilities (prototype pollution gadgets, ReDoS, header injection, proxy bypass, credential leak on redirect)
+ - chore: update vitest to 5.0.5 in the lockfile (pulls in fixed @vitest/mocker, vite and source-map-js) to resolve npm audit vulnerabilities
  - note: the state shown in the Home app is now refreshed every `pollInterval` seconds (default 60) instead of on every read
 
 ## v1.5.0 (2026-09-24)

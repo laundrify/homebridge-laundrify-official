@@ -51,6 +51,10 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Install bubblewrap, which CLAUDE_CODE_SUBPROCESS_ENV_SCRUB requires
+        if: steps.gate.outputs.run == 'true'
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends bubblewrap socat
+
       - name: Fix, test and assess the findings with Claude
         id: claude
         if: steps.gate.outputs.run == 'true'

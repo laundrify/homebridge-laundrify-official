@@ -19,9 +19,6 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    env:
-      # best-effort removal of the Claude and GitHub tokens from the environment of npm, the tests and the packages they run
-      CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: 1
     outputs:
       changed: ${{ steps.package.outputs.changed }}
       result: ${{ steps.claude.outputs.structured_output }}
@@ -51,22 +48,7 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Install bubblewrap, which CLAUDE_CODE_SUBPROCESS_ENV_SCRUB requires
-        if: steps.gate.outputs.run == 'true'
-        run: |
-          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends bubblewrap socat
-          # Ubuntu 24.04 only allows unprivileged user namespaces for programs whose AppArmor profile grants them, and
-          # bubblewrap ships without one ("bwrap: setting up uid map: Permission denied")
-          sudo tee /etc/apparmor.d/bwrap > /dev/null <<'EOF'
-          abi <abi/4.0>,
-          include <tunables/global>
-          profile bwrap /usr/bin/bwrap flags=(unconfined) {
-            userns,
-          }
-          EOF
-          sudo apparmor_parser -r /etc/apparmor.d/bwrap
-          bwrap --ro-bind / / true
-
+      # Without CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: its sandbox keeps package.json, the lockfile and node_modules read-only
       - name: Fix, test and assess the findings with Claude
         id: claude
         if: steps.gate.outputs.run == 'true'
@@ -141,6 +123,9 @@ jobs:
           git add -A
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
+            # fail, so GitHub notifies the maintainer about findings that stay open
+            echo "::error::npm audit reports findings, but Claude changed nothing. Its assessment is in the job summary."
+            exit 1
           else
             git diff --cached --binary > "$RUNNER_TEMP/fix.patch"
             echo "changed=true" >> "$GITHUB_OUTPUT"

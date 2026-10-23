@@ -96,16 +96,36 @@ jobs:
             Return:
             - title: a conventional-commit subject without the risk, e.g. "fix: bump axios to ^1.20.0 for GHSA-xxxx-xxxx-xxxx"
             - risk: low, medium or high
-            - body: GitHub markdown with these sections, short and specific:
-              **Risk: <level>**, then one sentence why, ending in "Just merge." for low or what to look at otherwise
-              ### Advisories: a table with Advisory (linked GHSA ID), Package, Severity, Scope (runtime/dev,
-                direct/transitive), Affects the plugin? (yes/no plus a few words why), Fix
-              ### Changes: bullets
-              ### User impact: what changes for people who install the published plugin (devDependency or lockfile-only
-                changes: none)
-              ### Verification: each check from step 4 with its result and key numbers (e.g. tests 19/19, e2e 7/7,
-                npm audit before/after)
-              ### Not fixed: only when some findings stay open, with the reason
+            - body: GitHub markdown following the template below. Make it as concise as possible: table cells of a few
+              words, no filler, nothing repeated across sections. One row per package and verdict, so advisories that
+              share both go into one row with all their linked GHSA IDs. A finding affects the plugin when it ships to
+              users (runtime dependency) and the plugin uses the vulnerable feature, or exploiting it only depends on
+              conditions outside the plugin's control (e.g. proxy environment variables, another plugin polluting
+              `Object.prototype`). Leave out the "Not fixed" section when everything was fixed.
+
+              **Risk: <level>**: <one sentence why>. <"Just merge." for low, otherwise what to look at>
+
+              ### Affecting the plugin
+              | Advisory | Package | Severity | Impact | Fix |
+              |---|---|---|---|---|
+              (or "None.")
+
+              <details><summary>Not affecting the plugin (<number of advisories>)</summary>
+
+              | Advisory | Package | Severity | Why not | Fix |
+              |---|---|---|---|---|
+
+              </details>
+
+              ### Changes
+              - <one bullet per changed dependency or file>
+
+              **User impact:** <one sentence; "None." for devDependency or lockfile-only changes>
+
+              **Verification:** npm ci ✓ · lint ✓ · typecheck ✓ · unit <passed>/<total> · e2e <passed>/<total> · npm audit <before> → <after>
+
+              ### Not fixed
+              - <advisory>: <reason>
             If you changed nothing, still return a title and a body with your assessment.
           claude_args: |
             --model opus

@@ -30,8 +30,9 @@ interval and pushes state to HomeKit; reads never hit the backend.
 ## Gotchas
 
 - `.github/workflows/security-fix.yml` (weekly, or manually): Claude fixes `npm audit` findings in a job with a read-only
-  token and returns title/risk/body as structured output; a second job opens the `security-fix` PR and dispatches
-  `build.yml` on it, since pushes with the job token trigger no workflows. Runs are skipped while such a PR is open.
+  token and returns title/risk/body as structured output; a second job opens the `security-fix` PR as
+  `github-actions[bot]`. Runs are skipped while such a PR is open, and fail (so GitHub sends an email) when there are
+  findings but nothing changed.
 - `npm run dev` passes `-P ..` because the repo-local Homebridge only scans its own `node_modules` chain and
   `%APPDATA%\npm\node_modules`. Other global trees (nvm and the like) are never searched.
 - The backend answers `GET /api/machines` with a superset of `GET /api/machines/:id`; the list is the only

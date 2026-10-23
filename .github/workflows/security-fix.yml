@@ -164,7 +164,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      actions: write   # to start the build workflow, which a push with the job token doesn't trigger
 
     steps:
       - uses: actions/checkout@v7
@@ -174,7 +173,7 @@ jobs:
           name: security-fix
           path: ${{ runner.temp }}
 
-      - name: Open the pull request and start the build workflow on it
+      - name: Open the pull request
         env:
           GH_TOKEN: ${{ github.token }}
           RESULT: ${{ needs.fix.outputs.result }}
@@ -204,4 +203,3 @@ jobs:
 
           gh label create security-fix --color B60205 --description 'Automated npm audit fix' --force
           gh pr create --base "$BASE" --head "$branch" --title "$subject (risk: $risk)" --body "$body" --label security-fix
-          gh workflow run build.yml --ref "$branch"

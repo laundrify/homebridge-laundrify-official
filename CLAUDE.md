@@ -8,7 +8,8 @@ interval and pushes state to HomeKit; reads never hit the backend.
 
 - `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`: all four run in CI and in `prepublishOnly`.
 - `npm run test:e2e`: builds, then runs `dist/` in a real Homebridge child process against the in-process mock and
-  asserts on the bridge's HAP server (`-I`, plain HTTP). About 1.5 min because `pollInterval` can't go below 10s. Runs in CI.
+  asserts on the bridge's HAP server (`-I`, plain HTTP). About 1.5 min because `pollInterval` can't go below 10s.
+  Runs in CI and in `prepublishOnly`.
 - `npm run mock`: local stand-in for the laundrify API on port 4999 (`test/mock-backend/server.ts` documents its
   control endpoints for switching failure modes and machine lists at runtime).
 - `npm run dev`: foreground Homebridge in debug mode with the plugin, using `test/hbConfig/` and the mock.
@@ -20,7 +21,8 @@ interval and pushes state to HomeKit; reads never hit the backend.
 
 - Tabs, single quotes, no semicolons, max line length 140 (`eslint.config.mjs`), `--max-warnings=0`.
 - Commit prefixes: `feat:`, `fix:`, `refactor:`, `chore:`, `test:`, `ci:`.
-- `CHANGELOG.md`: add lines under `## Unreleased`. The maintainer bumps the version and turns that section into
+- `CHANGELOG.md`: add lines under `## Unreleased`, changes that don't reach the published plugin (tests, CI,
+  devDependencies) under its `### Development` subheading. The maintainer bumps the version and turns that section into
   the release entry as the very last step before `npm publish`. Pull requests must not bump the version.
 - Only `dist/`, `config.schema.json` and `CHANGELOG.md` are published (`files` in `package.json`).
 - Tests live in `test/`, run with vitest and are type-checked via `tsconfig.test.json`. `test/helpers.ts` holds the

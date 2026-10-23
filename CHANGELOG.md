@@ -7,15 +7,19 @@
  - fix: report accessories as "Not Responding" after 3 consecutive failed polls (until the next successful poll)
  - fix: use a dedicated axios instance so baseURL and Authorization header don't affect other plugins in the same Homebridge process
  - fix: await config file writes, check HTTP status codes instead of matching error messages, mask the accessToken in debug output
+ - fix: bump axios to ^1.20.0 (and follow-redirects to 1.16.1 in the lockfile) to resolve npm audit vulnerabilities (prototype pollution gadgets, ReDoS, header injection, proxy bypass, credential leak on redirect)
  - chore: remove compatibility code for Homebridge <1.3.0 (`.on('get')` fallback) and for plugin configs written before v1.2.0
+ - chore: drop the `fs-extra` dependency, `node:fs` covers what the plugin needs
+ - note: the state shown in the Home app is now refreshed every `pollInterval` seconds (default 60) instead of on every read
+
+### Development
+
  - chore: lint all source files (`src/helper/` was skipped by the previous glob)
  - chore: add a mock backend and a local dev Homebridge setup (`npm run mock`, `npm run dev`)
  - chore: add a test suite (`npm test`, also run in CI)
+ - chore: add an end-to-end test that runs the plugin in a real Homebridge against the mock backend (`npm run test:e2e`, also run in CI and before publishing)
  - chore: add a weekly workflow in which Claude fixes `npm audit` findings and opens a pull request with a risk rating
- - chore: add an end-to-end test that runs the plugin in a real Homebridge against the mock backend (`npm run test:e2e`, also run in CI)
- - fix: bump axios to ^1.20.0 (and follow-redirects to 1.16.1 in the lockfile) to resolve npm audit vulnerabilities (prototype pollution gadgets, ReDoS, header injection, proxy bypass, credential leak on redirect)
  - chore: update vitest to 5.0.5 in the lockfile (pulls in fixed @vitest/mocker, vite and source-map-js) to resolve npm audit vulnerabilities
- - note: the state shown in the Home app is now refreshed every `pollInterval` seconds (default 60) instead of on every read
 
 ## v1.5.0 (2026-09-24)
 

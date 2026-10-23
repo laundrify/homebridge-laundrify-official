@@ -31,7 +31,7 @@
     "dev": "npm run build && homebridge -D -U ./test/hbConfig -P ..",
     "watch": "nodemon",
     "build": "rimraf ./dist && tsc",
-    "prepublishOnly": "npm run lint && npm run typecheck && npm test && npm run build"
+    "prepublishOnly": "npm run lint && npm run typecheck && npm test && npm run test:e2e"
   },
   "keywords": [
     "homebridge",

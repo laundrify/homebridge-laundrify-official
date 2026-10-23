@@ -76,7 +76,9 @@ jobs:
                Fix devDependency findings too when that is cheap. Never use `npm audit fix --force`, never bump the
                plugin's own version and leave unrelated dependencies alone. Leave a finding unfixed, and explain why, when
                no fixed version exists or the only fix is risky (e.g. a major bump of a transitive dependency).
-            3. Add one line per fix under `## Unreleased` in CHANGELOG.md, in the style of the existing entries.
+            3. Add one line per fix under `## Unreleased` in CHANGELOG.md (create it above the latest release if it's
+               missing), in the style of the existing entries. Fixes that only touch devDependencies go under its
+               `### Development` subheading.
             4. Verify, in this order: `npm ci` (proves package.json and the lockfile agree), `npm run lint`,
                `npm run typecheck`, `npm test`, `npm run test:e2e` (real Homebridge against the mock backend) and
                `npm audit`. If a check fails because a dependency changed its behaviour or API, fix the plugin code. Never

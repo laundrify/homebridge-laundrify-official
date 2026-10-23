@@ -76,4 +76,5 @@ Don't forget to restart Homebridge after saving the configuration.
   - `npm run dev` starts a Homebridge instance in debug mode with the plugin and the config in `test/hbConfig/`
   - `npm run watch` does the same and restarts on every source change
 - To test against the real laundrify API, link the plugin into a regular Homebridge installation (`npm run build && npm link`) and configure an AuthCode from the laundrify App
+- A weekly workflow (`.github/workflows/security-fix.yml`, also startable from the Actions tab) lets Claude fix `npm audit` findings and opens a pull request labelled `security-fix` with a risk rating. It needs the repository secret `CLAUDE_CODE_OAUTH_TOKEN` from `claude setup-token`, which expires after a year
 - Publish using `npm publish` (bump the version number in `package[-lock].json` and turn the `Unreleased` section of the changelog into the release entry first)

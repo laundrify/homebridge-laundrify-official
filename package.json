@@ -25,7 +25,8 @@
   "scripts": {
     "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\" --max-warnings=0",
     "typecheck": "tsc -p tsconfig.test.json",
-    "test": "vitest run",
+    "test": "vitest run --exclude \"test/e2e/**\"",
+    "test:e2e": "npm run build && vitest run test/e2e",
     "mock": "ts-node -P tsconfig.test.json test/mock-backend/cli.ts",
     "dev": "npm run build && homebridge -D -U ./test/hbConfig -P ..",
     "watch": "nodemon",

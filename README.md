@@ -70,6 +70,7 @@ Don't forget to restart Homebridge after saving the configuration.
 
 - Install dependencies using `npm i`
 - Run the checks: `npm run lint`, `npm run typecheck`, `npm test` and `npm run build`
+- Run `npm run test:e2e` to start the plugin in a real Homebridge against the mock backend and check what HomeKit sees (takes about 1.5 minutes)
 - Develop against the local mock backend:
   - `npm run mock` starts a stand-in for the laundrify API on port 4999 (see `test/mock-backend/server.ts` for its control endpoints)
   - `npm run dev` starts a Homebridge instance in debug mode with the plugin and the config in `test/hbConfig/`

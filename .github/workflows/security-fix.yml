@@ -53,7 +53,19 @@ jobs:
 
       - name: Install bubblewrap, which CLAUDE_CODE_SUBPROCESS_ENV_SCRUB requires
         if: steps.gate.outputs.run == 'true'
-        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends bubblewrap socat
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends bubblewrap socat
+          # Ubuntu 24.04 only allows unprivileged user namespaces for programs whose AppArmor profile grants them, and
+          # bubblewrap ships without one ("bwrap: setting up uid map: Permission denied")
+          sudo tee /etc/apparmor.d/bwrap > /dev/null <<'EOF'
+          abi <abi/4.0>,
+          include <tunables/global>
+          profile bwrap /usr/bin/bwrap flags=(unconfined) {
+            userns,
+          }
+          EOF
+          sudo apparmor_parser -r /etc/apparmor.d/bwrap
+          bwrap --ro-bind / / true
 
       - name: Fix, test and assess the findings with Claude
         id: claude

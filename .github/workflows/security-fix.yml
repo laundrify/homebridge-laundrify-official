@@ -1,7 +1,8 @@
 name: Security Fixes
 
-# Weekly: when `npm audit` reports findings and no fix PR is open, Claude fixes, tests and assesses them in a job with a
-# read-only token. A second job, which never runs dependency code, turns the result into a pull request.
+# Weekly: when `npm audit` reports findings in runtime dependencies and no fix PR is open, Claude fixes, tests and
+# assesses them in a job with a read-only token. A second job, which never runs dependency code, turns the result into a
+# pull request.
 
 on:
   schedule:
@@ -41,7 +42,8 @@ jobs:
           if [ "$open" != 0 ]; then
             echo "::notice::A security-fix pull request is still open, skipping this run"
             echo "run=false" >> "$GITHUB_OUTPUT"
-          elif npm audit; then
+          # dev-only findings without a fix would otherwise start a run (and fail it) every week
+          elif npm audit --omit=dev; then
             echo "run=false" >> "$GITHUB_OUTPUT"
           else
             echo "run=true" >> "$GITHUB_OUTPUT"
@@ -76,8 +78,8 @@ jobs:
                plugin's own version and leave unrelated dependencies alone. Leave a finding unfixed, and explain why, when
                no fixed version exists or the only fix is risky (e.g. a major bump of a transitive dependency).
             3. Add one line per fix under `## Unreleased` in CHANGELOG.md (create it above the latest release if it's
-               missing), in the style of the existing entries. Fixes that only touch devDependencies go under its
-               `### Development` subheading.
+               missing), in the style of the existing entries. Fixes that don't change what users install
+               (devDependencies, lockfile-only updates) go under its `### Development` subheading.
             4. Verify, in this order: `npm ci` (proves package.json and the lockfile agree), `npm run lint`,
                `npm run typecheck`, `npm test`, `npm run test:e2e` (real Homebridge against the mock backend) and
                `npm audit`. If a check fails because a dependency changed its behaviour or API, fix the plugin code. Never
@@ -102,7 +104,8 @@ jobs:
               share both go into one row with all their linked GHSA IDs. A finding affects the plugin when it ships to
               users (runtime dependency) and the plugin uses the vulnerable feature, or exploiting it only depends on
               conditions outside the plugin's control (e.g. proxy environment variables, another plugin polluting
-              `Object.prototype`). Leave out the "Not fixed" section when everything was fixed.
+              `Object.prototype`). Leave out the "Not fixed" section when everything was fixed. No footer or
+              attribution line: the workflow adds one.
 
               **Risk: <level>**: <one sentence why>. <"Just merge." for low, otherwise what to look at>
 

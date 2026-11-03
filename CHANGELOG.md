@@ -8,6 +8,7 @@
  - fix: use a dedicated axios instance so baseURL and Authorization header don't affect other plugins in the same Homebridge process
  - fix: await config file writes, check HTTP status codes instead of matching error messages, mask the accessToken in debug output
  - fix: bump axios to ^1.20.0 (and follow-redirects to 1.16.1 in the lockfile) to resolve npm audit vulnerabilities (prototype pollution gadgets, ReDoS, header injection, proxy bypass, credential leak on redirect)
+ - fix: update follow-redirects to 1.16.2 in the lockfile to resolve an npm audit vulnerability (custom credential headers kept on redirect)
  - chore: remove compatibility code for Homebridge <1.3.0 (`.on('get')` fallback) and for plugin configs written before v1.2.0
  - chore: drop the `fs-extra` dependency, `node:fs` covers what the plugin needs
  - note: the state shown in the Home app is now refreshed every `pollInterval` seconds (default 60) instead of on every read

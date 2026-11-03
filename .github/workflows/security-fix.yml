@@ -21,7 +21,6 @@ jobs:
       pull-requests: read
     outputs:
       changed: ${{ steps.package.outputs.changed }}
-      result: ${{ steps.claude.outputs.structured_output }}
 
     steps:
       - uses: actions/checkout@v7
@@ -141,7 +140,7 @@ jobs:
         env:
           RESULT: ${{ steps.claude.outputs.structured_output }}
         run: |
-          jq -r .body <<< "$RESULT" >> "$GITHUB_STEP_SUMMARY"
+          jq -er .body <<< "$RESULT" >> "$GITHUB_STEP_SUMMARY"
           git add -A
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -150,6 +149,8 @@ jobs:
             exit 1
           else
             git diff --cached --binary > "$RUNNER_TEMP/fix.patch"
+            # an artifact, not a job output: GitHub drops job outputs that contain anything matching a masked secret
+            echo "$RESULT" > "$RUNNER_TEMP/result.json"
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -157,7 +158,9 @@ jobs:
         if: steps.package.outputs.changed == 'true'
         with:
           name: security-fix
-          path: ${{ runner.temp }}/fix.patch
+          path: |
+            ${{ runner.temp }}/fix.patch
+            ${{ runner.temp }}/result.json
 
   pr:
     needs: fix
@@ -178,15 +181,14 @@ jobs:
       - name: Open the pull request
         env:
           GH_TOKEN: ${{ github.token }}
-          RESULT: ${{ needs.fix.outputs.result }}
           BASE: ${{ github.event.repository.default_branch }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           git apply --index "$RUNNER_TEMP/fix.patch"
 
-          subject=$(jq -r .title <<< "$RESULT")
-          risk=$(jq -r .risk <<< "$RESULT")
-          body=$(jq -r .body <<< "$RESULT")
+          subject=$(jq -r .title "$RUNNER_TEMP/result.json")
+          risk=$(jq -r .risk "$RUNNER_TEMP/result.json")
+          body=$(jq -r .body "$RUNNER_TEMP/result.json")
 
           # "Just merge" is only plausible while nothing but the manifest, lockfile and changelog changed
           others=$(git diff --cached --name-only | grep -vxE 'package\.json|package-lock\.json|CHANGELOG\.md' || true)
